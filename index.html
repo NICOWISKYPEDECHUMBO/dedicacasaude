@@ -171,7 +171,8 @@ td input[type=checkbox]{width:18px;height:18px;accent-color:var(--teal)}
 .horas{display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:8px}
 .hbtn{border:1px solid #cfd9f1;background:linear-gradient(#fff,#eef8f7);border-radius:14px;padding:10px 6px;cursor:pointer;font-weight:800;font-size:16px;color:var(--pet);box-shadow:0 3px 0 #c3cfee,0 6px 12px -6px rgba(28,42,107,.35)}
 .hbtn small{display:block;font-size:11px;font-weight:600;color:var(--sub);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.hbtn.larga{grid-column:span 2}
+.hbtn.larga{grid-column:1/-1;padding:14px 12px}
+.hbtn.larga small{white-space:normal;font-size:12px}
 .hbtn:active{transform:translateY(3px);box-shadow:none}
 .dica{font-size:12.5px;color:var(--sub);margin-top:10px}
 .ct{font-size:15px;color:var(--pet);margin-bottom:8px}
@@ -214,7 +215,7 @@ td input[type=checkbox]{width:18px;height:18px;accent-color:var(--teal)}
      </div>
      <div class="mesnav"><button id="hAnt">‹</button><h2 id="hTitulo"></h2><button id="hProx">›</button></div>
      <div class="grade" id="hGrade"></div>
-     <div class="leg"><span><i class="st-concluido"></i>Dias com horários livres (número = vagas)</span><span class="aovivo">● ao vivo</span></div>
+     <div class="leg"><span><i class="st-concluido"></i>Dias com atendimento (número = horários livres · ✓ = ordem de chegada)</span></div>
     </div>
     <div class="card"><h3 style="font-size:15px;margin-bottom:8px;color:var(--pet)" id="hDiaTit"></h3><div id="hLista"></div></div>
    </div>
@@ -345,7 +346,7 @@ function parseNasc(t){
 const msgsEl=$('#msgs');
 let passo='menu', tmp={}, ultimoDia='', SERV=[], SERV_T=0, SERV_U=null, UNID=[];
 let hist=LS.get('dd_hist',[]);
-const CH_MENU=[{l:'📅 Agendar atendimento',v:'#agendar'},{l:'💙 Serviços e valores',v:'#servicos'},{l:'🗂️ Meus agendamentos',v:'#meus'}];
+const CH_MENU=[{l:'Agendar atendimento',v:'#agendar'},{l:'Serviços e valores',v:'#servicos'},{l:'Meus agendamentos',v:'#meus'}];
 const ehSim=(v,n)=>v==='#sim'||/^(sim|s|ok|isso|certo|confirm|pode|correto|aceito)/.test(n);
 async function servicos(uid){ uid=uid||null; if(!SERV.length||SERV_U!==uid||Date.now()-SERV_T>60000){ SERV=await api('servicos',{unidade_id:uid}); SERV_T=Date.now(); SERV_U=uid; } return SERV; }
 async function unidades(){ UNID=await api('unidades'); return UNID; }
@@ -374,17 +375,17 @@ async function entradaAgora(v,rot){
  const sens=['cad_docnum','id_nasc','cad_nasc'].includes(passo);
  eu(rot||(sens&&passo==='cad_docnum'?v.replace(/\d(?=\d{3})/g,'•'):v));
  try{ await processar(v); }
- catch(e){ await bot('⚠️ '+e.message); await menu(); }
+ catch(e){ await bot(e.message); await menu(); }
 }
 
 async function menu(txt){ passo='menu'; tmp={}; await bot(txt||'Como posso te ajudar?',CH_MENU); }
 async function pedirId(depois,pre){
  tmp={depois,pre}; passo='id_nome';
- await bot('Para começar, qual o seu *nome completo*? 😊');
+ await bot('Para começar, qual o seu *nome completo*?');
 }
 async function pedirNasc(depois){
  tmp={depois}; passo='conf_nasc';
- await bot(`Por segurança, para ver seus agendamentos confirme sua *data de nascimento* (dd/mm/aaaa) 🔒`);
+ await bot(`Por segurança, para ver seus agendamentos confirme sua *data de nascimento* (dd/mm/aaaa)`);
 }
 async function continuar(){ const d=tmp.depois, pre=tmp.pre; tmp={}; if(d==='agendar') return agIni(pre); if(d==='meus') return meus(); if(d==='conta'){ telaConta(); return menu(); } return menu(); }
 function entrou(r,nasc){ C={codigo:r.codigo,nome:r.nome,token:r.token,nascimento:nasc||null}; LS.set('dd_cli',C); atualizarTopo(); }
@@ -393,8 +394,8 @@ let PRE=null;
 async function processar(v){
  const n=norm(v);
  if(v==='#agendar-pre'){ const p=PRE; PRE=null; return agIni(p); }
- if(v==='#copiarpix'){ copiarTexto(PIX_EMPRESA); return bot('Chave PIX copiada! É só colar no app do seu banco 💙',chipsPix(tmp.ultimo||{id:''})); }
- if(v.startsWith('#comprovante')){ const id=v.slice(12); window.open(`https://wa.me/55${WHATSAPP_EMPRESA}?text=${encodeURIComponent('Olá! Segue o comprovante do PIX do sinal do meu agendamento nº '+id+(C?' ('+C.nome+')':'')+'.')}`,'_blank','noopener'); return bot('Abri o WhatsApp para você enviar o comprovante 📤',CH_MENU); }
+ if(v==='#copiarpix'){ copiarTexto(PIX_EMPRESA); return bot('Chave PIX copiada! É só colar no app do seu banco',chipsPix(tmp.ultimo||{id:''})); }
+ if(v.startsWith('#comprovante')){ const id=v.slice(12); window.open(`https://wa.me/55${WHATSAPP_EMPRESA}?text=${encodeURIComponent('Olá! Segue o comprovante do PIX do sinal do meu agendamento nº '+id+(C?' ('+C.nome+')':'')+'.')}`,'_blank','noopener'); return bot('Abri o WhatsApp para você enviar o comprovante',CH_MENU); }
  if(v==='#voltarcat'){ passo='ag_cat'; tmp.cat=null; return bot('O que você precisa?',chipsCat()); }
  if(['menu','voltar','inicio','#menu'].includes(n)) return menu();
  switch(passo){
@@ -404,19 +405,19 @@ async function processar(v){
  case 'id_nome':{
   if(v.trim().length<5||!/\s/.test(v.trim())) return bot('Digite seu *nome completo* (nome e sobrenome), por favor.');
   const r=await api('clienteIdentificar',{nome:v});
-  if(r.status==='ok'){ entrou(r); await bot(`Olá, *${primeiro(r.nome)}*! Tudo bem? Que bom ter você de volta 💙`); return continuar(); }
+  if(r.status==='ok'){ entrou(r); await bot(`Olá, *${primeiro(r.nome)}*! Tudo bem? Que bom ter você de volta!`); return continuar(); }
   if(r.status==='nascimento'){ tmp.nome=v; passo='id_nasc'; return bot('Encontrei mais de um cadastro com esse nome. Qual a sua *data de nascimento*? (dd/mm/aaaa)'); }
   tmp.cad={nome:titulo(v)}; passo='cad_nasc';
-  return bot(`Prazer, *${primeiro(tmp.cad.nome)}*! Não encontrei seu cadastro, então vamos criar um rapidinho 📝\n\nQual a sua *data de nascimento*? (dd/mm/aaaa)`,[{l:'✏️ Digitei meu nome errado',v:'#redigitar'}]); }
+  return bot(`Prazer, *${primeiro(tmp.cad.nome)}*! Não encontrei seu cadastro, então vamos criar um rapidinho.\n\nQual a sua *data de nascimento*? (dd/mm/aaaa)`,[{l:'Digitei meu nome errado',v:'#redigitar'}]); }
  case 'id_nasc':{
   const nasc=parseNasc(v); if(!nasc) return bot('Data inválida. Escreva assim: *25/03/1985*');
   const r=await api('clienteIdentificar',{nome:tmp.nome,nascimento:nasc});
-  if(r.status==='ok'){ entrou(r,nasc); await bot(`Olá, *${primeiro(r.nome)}*! Tudo bem? Que bom ter você de volta 💙`); return continuar(); }
-  tmp.cad={nome:titulo(tmp.nome),nascimento:nasc}; return cadLgpd(`Não encontrei cadastro com essa data, então vou criar um novo para você, *${primeiro(tmp.cad.nome)}* 📝`); }
+  if(r.status==='ok'){ entrou(r,nasc); await bot(`Olá, *${primeiro(r.nome)}*! Tudo bem? Que bom ter você de volta!`); return continuar(); }
+  tmp.cad={nome:titulo(tmp.nome),nascimento:nasc}; return cadLgpd(`Não encontrei cadastro com essa data, então vou criar um novo para você, *${primeiro(tmp.cad.nome)}*`); }
  case 'conf_nasc':{
   const nasc=parseNasc(v); if(!nasc) return bot('Data inválida. Escreva assim: *25/03/1985*');
   try{ const r=await api('clienteLogin',{codigo:C.codigo,nascimento:nasc}); entrou(r,nasc); }
-  catch(e){ return bot('❌ '+e.message+'\nTente de novo:'); }
+  catch(e){ return bot(e.message+'\nTente de novo:'); }
   return continuar(); }
 
  /* cadastro: só nome + data de nascimento */
@@ -425,15 +426,15 @@ async function processar(v){
   const nasc=parseNasc(v); if(!nasc) return bot('Data inválida. Escreva assim: *25/03/1985*');
   tmp.cad.nascimento=nasc; return cadLgpd(); }
  case 'cad_lgpd':
-  if(v==='#pol'){ abrirPolitica(); return bot('Quando terminar de ler, é só confirmar 👇',CH_LGPD); }
+  if(v==='#pol'){ abrirPolitica(); return bot('Quando terminar de ler, é só confirmar.',CH_LGPD); }
   if(v==='#aceito'||/aceito|concordo|^sim/.test(n)){ tmp.cad.consentimento=true; passo='cad_conf'; const c=tmp.cad;
-   return bot(`Confere seus dados:\n\n👤 *${c.nome}*\n🎂 ${brD(c.nascimento)}\n\nEstá tudo certo?`,[{l:'✅ Confirmar',v:'#sim'},{l:'✏️ Corrigir',v:'#nao'}]); }
-  return menu('Sem o aceite da política não conseguimos fazer o cadastro 🙏\nVocê ainda pode ver os serviços e os horários livres.');
+   return bot(`Confere seus dados:\n\n*${c.nome}*\n${brD(c.nascimento)}\n\nEstá tudo certo?`,[{l:'Confirmar',v:'#sim'},{l:'Corrigir',v:'#nao'}]); }
+  return menu('Sem o aceite da política não conseguimos fazer o cadastro.\nVocê ainda pode ver os serviços e os horários livres.');
  case 'cad_conf':
   if(ehSim(v,n)){
    const c=tmp.cad; const r=await api('clienteCadastrar',{nome:c.nome,nascimento:c.nascimento,consentimento:true,versao:POLITICA_VERSAO});
    entrou(r,c.nascimento);
-   await bot(`🎉 Cadastro feito, *${primeiro(r.nome)}*! Seja bem-vindo(a) 💙\nDa próxima vez é só dizer seu nome.`);
+   await bot(`Cadastro feito, *${primeiro(r.nome)}*! Seja bem-vindo(a)!\nDa próxima vez é só dizer seu nome.`);
    return continuar();
   }
   passo='id_nome'; tmp.cad={}; return bot('Sem problema, vamos de novo. Qual o seu *nome completo*?');
@@ -478,11 +479,11 @@ async function processar(v){
    try{
     const r=await api('agendar',{...credAg(),servico_id:tmp.serv.id,unidade_id:tmp.unid.id,profissional_id:tmp.prof?tmp.prof.id:null,data:tmp.data,hora:tmp.hora});
     carregarHorarios(true);
-    const quando=r.modo==='chegada'?`📅 *${brDL(r.data)}*\n⏰ Chegue a partir das *${r.hora}* (até ${r.fim})\n🚶 Atendimento por *ordem de chegada*`:`📅 *${brDL(r.data)}* às *${r.hora}*\n⏰ Chegue com 10 minutos de antecedência`;
-    await bot(`✅ *Agendamento feito!* (nº ${r.id})\n\n${r.especialidade==='Check-up'?'🩺':'💆'} ${r.servico}\n${quando}\n📍 *${r.unidade||''}*${r.unidade_endereco?'\n'+r.unidade_endereco:''}\n👤 Profissional: ${r.profissional}\n💰 ${reais(r.valor)}\n\nSe precisar desmarcar, é só vir em *Meus agendamentos*.`);
+    const quando=r.modo==='chegada'?`*${brDL(r.data)}*\nChegue a partir das *${r.hora}* (até ${r.fim})\nAtendimento por *ordem de chegada*`:`*${brDL(r.data)}* às *${r.hora}*\nChegue com 10 minutos de antecedência`;
+    await bot(`*Agendamento feito!* (nº ${r.id})\n\n*${r.servico}*\n${quando}\n*${r.unidade||''}*${r.unidade_endereco?'\n'+r.unidade_endereco:''}\nProfissional: ${r.profissional}\nValor: ${reais(r.valor)}\n\nSe precisar desmarcar, é só vir em *Meus agendamentos*.`);
     tmp.ultimo=r; passo='menu';
-    return bot('💳 O pagamento é feito *na unidade*, no dia do atendimento. Até lá! 💙',[{l:'Voltar ao menu',v:'menu'}]);
-   }catch(e){ if(/identificação expirou/.test(e.message)){ C=null; LS.del('dd_cli'); atualizarTopo(); await bot('⚠️ '+e.message); return pedirId('agendar',{servico_id:tmp.serv.id,unidade_id:tmp.unid.id,data:tmp.data,hora:tmp.hora}); } await bot('⚠️ '+e.message); tmp.data=null; tmp.hora=null; return agDia(); }
+    return bot('O pagamento é feito *na unidade*, no dia do atendimento. Até lá!',[{l:'Voltar ao menu',v:'menu'}]);
+   }catch(e){ if(/identificação expirou/.test(e.message)){ C=null; LS.del('dd_cli'); atualizarTopo(); await bot(e.message); return pedirId('agendar',{servico_id:tmp.serv.id,unidade_id:tmp.unid.id,data:tmp.data,hora:tmp.hora}); } await bot(e.message); tmp.data=null; tmp.hora=null; return agDia(); }
   }
   return menu();
 
@@ -493,16 +494,16 @@ async function processar(v){
   tmp.sel=a; passo='ca_conf';
   return bot(`Cancelar *${a.servico}* em ${brDL(a.data)} às ${a.hora}?`,[{l:'Sim, cancelar',v:'#sim'},{l:'Não',v:'menu'}]); }
  case 'ca_conf':
-  if(ehSim(v,n)){ await api('cancelar',{...cred(),id:tmp.sel.id}); carregarHorarios(true); return menu('❌ Agendamento cancelado. O horário ficou livre de novo.\n\nPosso ajudar em mais alguma coisa?'); }
+  if(ehSim(v,n)){ await api('cancelar',{...credAg(),id:tmp.sel.id}); carregarHorarios(true); return menu('Agendamento cancelado. O horário ficou livre de novo.\n\nPosso ajudar em mais alguma coisa?'); }
   return menu();
  }
  return menu();
 }
 
-const CH_LGPD=[{l:'✅ Li e aceito',v:'#aceito'},{l:'📄 Ler a política',v:'#pol'},{l:'Não aceito',v:'#naoaceito'}];
+const CH_LGPD=[{l:'Li e aceito',v:'#aceito'},{l:'Ler a política',v:'#pol'},{l:'Não aceito',v:'#naoaceito'}];
 async function cadLgpd(pre){
  passo='cad_lgpd';
- await bot((pre?pre+'\n\n':'')+`🔒 *Seus dados estão protegidos (LGPD)*\nPedimos só nome e data de nascimento, usados apenas para seus agendamentos. Ficam guardados com segurança no Brasil e você pode pedir a exclusão quando quiser.\n\nPara concluir, confirme que leu e aceita a *Política de Privacidade*.`,CH_LGPD);
+ await bot((pre?pre+'\n\n':'')+`*Seus dados estão protegidos (LGPD)*\nPedimos só nome e data de nascimento, usados apenas para seus agendamentos. Ficam guardados com segurança no Brasil e você pode pedir a exclusão quando quiser.\n\nPara concluir, confirme que leu e aceita a *Política de Privacidade*.`,CH_LGPD);
 }
 
 async function livre(v){
@@ -512,37 +513,37 @@ async function livre(v){
  if(/agend|marcar|marca|horario|vaga/.test(n)) return agIni();
  if(/servic|preco|valor|quanto|custa|massag|fisio/.test(n)) return mostrarServicos();
  if(/\bmeus\b|minhas|meu agend/.test(n)) return meus();
- if(/bom dia|boa tarde|boa noite|^oi\b|^ola\b|^opa\b|^e ai/.test(n)) return menu(`${saud()}${C?', *'+primeiro(C.nome)+'*':''}! 😊 Como posso te ajudar?`);
- if(/obrigad|valeu|\bvlw\b|brigad/.test(n)) return bot('Por nada! Estamos à disposição 💚',CH_MENU);
- return bot('Não entendi 🤔 Toque numa opção abaixo ou escreva, por exemplo, _"quero agendar"_ ou _"quais os valores?"_',CH_MENU);
+ if(/bom dia|boa tarde|boa noite|^oi\b|^ola\b|^opa\b|^e ai/.test(n)) return menu(`${saud()}${C?', *'+primeiro(C.nome)+'*':''}! Como posso te ajudar?`);
+ if(/obrigad|valeu|\bvlw\b|brigad/.test(n)) return bot('Por nada! Estamos à disposição.',CH_MENU);
+ return bot('Não entendi. Toque numa opção abaixo ou escreva, por exemplo, _"quero agendar"_ ou _"quais os valores?"_',CH_MENU);
 }
 
-const CAT_ROT={'Check-up':'🩺 Check-up e exames','Massoterapia':'💆 Massoterapia','Fisioterapia':'🦴 Fisioterapia'};
+const CAT_ROT={'Check-up':'Check-up e exames','Massoterapia':'Massoterapia','Fisioterapia':'Fisioterapia'};
 const categorias=()=>[...new Set(SERV.map(s=>s.especialidade))];
 const chipsCat=()=>[...categorias().map(k=>({l:CAT_ROT[k]||k,v:'#k'+k})),{l:'Voltar ao menu',v:'menu'}];
 const itensDe=s=>String(s.descricao||'').split('\n').map(x=>x.trim()).filter(Boolean);
 function detalheServ(s){
  const it=itensDe(s); const intro=[]; while(it.length&&/^(sess|valor)/i.test(it[0])) intro.push(it.shift());
- return `*${s.nome}*${intro.length?'\n'+intro.join('\n'):''}${it.length?'\n\n'+(s.especialidade==='Check-up'?'Inclui:\n':'Trabalhamos com:\n')+it.map(x=>'• '+x).join('\n'):''}\n\n💰 *Valor:* ${reais(s.valor)}${s.especialidade==='Massoterapia'?' por sessão':''}`;
+ return `*${s.nome}*${intro.length?'\n'+intro.join('\n'):''}${it.length?'\n\n'+(s.especialidade==='Check-up'?'Inclui:\n':'Trabalhamos com:\n')+it.map(x=>'• '+x).join('\n'):''}\n\n*Valor:* ${reais(s.valor)}${s.especialidade==='Massoterapia'?' por sessão':''}`;
 }
 function avisoSinal(valor){
- return `💳 _O pagamento (${reais(valor)}) é feito *na unidade*, no dia do atendimento — PIX, cartão ou dinheiro. Não é preciso pagar nada agora._`;
+ return `_O pagamento (${reais(valor)}) é feito *na unidade*, no dia do atendimento — PIX, cartão ou dinheiro. Não é preciso pagar nada agora._`;
 }
 function instrucoesPix(r){
  const sinal=r.valor*SINAL;
- return `💠 *Pague o sinal agora via PIX*\nValor: *${reais(sinal)}*${PIX_EMPRESA?`\nChave PIX: *${PIX_EMPRESA}*\nFavorecido: ${PIX_NOME}`:'\nNossa equipe vai te enviar a chave PIX pelo WhatsApp.'}\n\nDepois de pagar, ${WHATSAPP_EMPRESA?'envie o comprovante pelo WhatsApp no botão abaixo':'guarde o comprovante'}. Seu agendamento é confirmado quando recebermos o sinal. ✅`;
+ return `*Pague o sinal agora via PIX*\nValor: *${reais(sinal)}*${PIX_EMPRESA?`\nChave PIX: *${PIX_EMPRESA}*\nFavorecido: ${PIX_NOME}`:'\nNossa equipe vai te enviar a chave PIX pelo WhatsApp.'}\n\nDepois de pagar, ${WHATSAPP_EMPRESA?'envie o comprovante pelo WhatsApp no botão abaixo':'guarde o comprovante'}. Seu agendamento é confirmado quando recebermos o sinal.`;
 }
 function chipsPix(r){
- const c=[]; if(PIX_EMPRESA) c.push({l:'📋 Copiar chave PIX',v:'#copiarpix'});
- if(WHATSAPP_EMPRESA) c.push({l:'📤 Enviar comprovante no WhatsApp',v:'#comprovante'+r.id});
+ const c=[]; if(PIX_EMPRESA) c.push({l:'Copiar chave PIX',v:'#copiarpix'});
+ if(WHATSAPP_EMPRESA) c.push({l:'Enviar comprovante no WhatsApp',v:'#comprovante'+r.id});
  return [...c,...CH_MENU];
 }
 function copiarTexto(t){ (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Chave PIX copiada!')).catch(()=>{ const a=document.createElement('textarea'); a.value=t; document.body.appendChild(a); a.select(); try{document.execCommand('copy');toast('Chave PIX copiada!');}catch(e){} a.remove(); }); }
 async function mostrarServicos(){
  const sv=await servicos(null);
- if(!sv.length) return menu('No momento não temos serviços disponíveis para agendamento online. 🙏');
+ if(!sv.length) return menu('No momento não temos serviços disponíveis para agendamento online.');
  tmp={}; passo='ag_cat';
- await bot('Temos estes atendimentos na *Dedica + Saúde* 💙\nO que você procura?',chipsCat());
+ await bot('Temos estes atendimentos na *Dedica + Saúde*.\nO que você procura?',chipsCat());
 }
 
 /* agendar */
@@ -554,11 +555,11 @@ async function agIni(pre){
  const cat=tmp&&tmp.cat, serv=tmp&&tmp.serv;
  tmp={pre:pre||{}};
  const sv=await servicos(null);
- if(!sv.length) return menu('No momento não temos horários disponíveis para agendamento online. 🙏');
+ if(!sv.length) return menu('No momento não temos horários disponíveis para agendamento online.');
  if(tmp.pre.servico_id){ tmp.serv=sv.find(s=>s.id==tmp.pre.servico_id); if(tmp.serv){ tmp.cat=tmp.serv.especialidade; return (tmp.pre.data||tmp.pre.ok)?agUnid():agDetalhe(); } }
  const cats=categorias();
  if(cats.length===1){ tmp.cat=cats[0]; return agServLista(); }
- passo='ag_cat'; return bot('📅 Vamos agendar! O que você precisa?',chipsCat());
+ passo='ag_cat'; return bot('Vamos agendar! O que você precisa?',chipsCat());
 }
 async function agServLista(){
  const lst=SERV.filter(x=>x.especialidade===tmp.cat);
@@ -567,27 +568,27 @@ async function agServLista(){
 }
 async function agDetalhe(){
  passo='ag_det';
- return bot(detalheServ(tmp.serv)+'\n\n'+avisoSinal(tmp.serv.valor)+'\n\n*Podemos prosseguir com o seu agendamento?*',[{l:'✅ Sim, quero agendar',v:'#quero'},{l:'Ver outras opções',v:'#outros'},{l:'Voltar ao menu',v:'menu'}]);
+ return bot(detalheServ(tmp.serv)+'\n\n'+avisoSinal(tmp.serv.valor)+'\n\n*Podemos prosseguir com o seu agendamento?*',[{l:'Sim, quero agendar',v:'#quero'},{l:'Ver outras opções',v:'#outros'},{l:'Voltar ao menu',v:'menu'}]);
 }
 async function agUnid(){
  if(!C) return pedirId('agendar',{servico_id:tmp.serv.id,ok:true});
  const us=await api('unidades',{servico_id:tmp.serv.id}); UNID=us;
- if(!us.length) return menu(`No momento não há horários disponíveis para *${tmp.serv.nome}*. 🙏 Fale com a nossa equipe.`);
+ if(!us.length) return menu(`No momento não há horários disponíveis para *${tmp.serv.nome}*. Fale com a nossa equipe.`);
  if(tmp.pre&&tmp.pre.unidade_id) tmp.unid=us.find(u=>u.id==tmp.pre.unidade_id);
- if(!tmp.unid&&us.length===1){ tmp.unid=us[0]; await bot(`📍 Atendimento presencial na unidade *${us[0].nome}*${us[0].endereco?'\n'+us[0].endereco:''}`); }
- if(!tmp.unid){ passo='ag_unid'; return bot('📍 Atendimento presencial. Em qual *unidade* você prefere?',chipsUnid()); }
+ if(!tmp.unid&&us.length===1){ tmp.unid=us[0]; await bot(`Atendimento presencial na unidade *${us[0].nome}*${us[0].endereco?'\n'+us[0].endereco:''}`); }
+ if(!tmp.unid){ passo='ag_unid'; return bot('Atendimento presencial. Em qual *unidade* você prefere?',chipsUnid()); }
  return agProf();
 }
 async function agProf(){
  tmp.profs=await api('profissionais',{servico_id:tmp.serv.id,unidade_id:tmp.unid.id});
- if(!tmp.profs.length) return menu(`No momento não há profissionais disponíveis para *${tmp.serv.nome}* nesta unidade. 🙏`);
+ if(!tmp.profs.length) return menu(`No momento não há profissionais disponíveis para *${tmp.serv.nome}* nesta unidade.`);
  if(tmp.pre.profissional_id||tmp.pre.data){ tmp.prof=tmp.profs.find(p=>p.id==tmp.pre.profissional_id)||null; return agDia(); }
  tmp.prof=tmp.profs.length===1?tmp.profs[0]:null; return agDia(); // cliente não escolhe profissional
 }
 async function agDia(){
  const L=await api('livres',{servico_id:tmp.serv.id,unidade_id:tmp.unid.id,profissional_id:tmp.prof?tmp.prof.id:null,dias:30});
  tmp.slots=L.slots; tmp.dias={}; L.slots.forEach(s=>(tmp.dias[s.data]=tmp.dias[s.data]||[]).push(s));
- if(!L.slots.length) return menu('Não encontrei horários livres nos próximos 30 dias 😕\nTente outro serviço ou profissional, ou fale com a nossa equipe.');
+ if(!L.slots.length) return menu('Não encontrei horários livres nos próximos 30 dias.\nTente outro serviço ou profissional, ou fale com a nossa equipe.');
  if(tmp.pre.data&&tmp.dias[tmp.pre.data]){ tmp.data=tmp.pre.data; const p=tmp.pre; tmp.pre={}; if(p.hora&&horasDoDia().includes(p.hora)){ tmp.hora=p.hora; return agConf(); } return agHora(); }
  tmp.pagDia=0; return mostrarDias();
 }
@@ -605,31 +606,41 @@ async function agHora(){ passo='ag_hora'; return bot(`Horários livres em *${brD
 async function agConf(){
  passo='ag_conf'; const s=tmp.serv, sl=slotDe(tmp.hora)||{}, u=tmp.unid;
  if(!tmp.prof&&sl.profissional) tmp.prof={id:sl.profissional_id,nome:sl.profissional};
- const quando=sl.modo==='chegada'?`📅 ${brDL(tmp.data)}\n⏰ Turno: *${sl.hora} às ${sl.ate}*\n🚶 *Atendimento por ordem de chegada*`:`📅 ${brDL(tmp.data)} às *${tmp.hora}*`;
- return bot(`Confere o agendamento:\n\n${s.especialidade==='Check-up'?'🩺':'💆'} *${s.nome}*\n📍 ${u.nome}${u.endereco?' – '+u.endereco:''}\n${quando}\n👤 ${tmp.prof?tmp.prof.nome:'Profissional disponível'}\n💰 *${reais(s.valor)}*\n\n${avisoSinal(s.valor)}`,[{l:'✅ Confirmar agendamento',v:'#sim'},{l:'🔄 Trocar horário',v:'#trocar'},{l:'Cancelar',v:'menu'}]);
+ const quando=sl.modo==='chegada'?`${brDL(tmp.data)}\nTurno: *${sl.hora} às ${sl.ate}*\n*Atendimento por ordem de chegada*`:`${brDL(tmp.data)} às *${tmp.hora}*`;
+ return bot(`Confere o agendamento:\n\n*${s.nome}*\nUnidade: ${u.nome}${u.endereco?' – '+u.endereco:''}\n${quando}\nProfissional: ${tmp.prof?tmp.prof.nome:'disponível'}\nValor: *${reais(s.valor)}*\n\n${avisoSinal(s.valor)}`,[{l:'Confirmar agendamento',v:'#sim'},{l:'Trocar horário',v:'#trocar'},{l:'Cancelar',v:'menu'}]);
 }
 
 /* meus agendamentos */
 async function meus(){
  if(!C) return pedirId('meus');
- if(!C.nascimento) return pedirNasc('meus');
- const l=await api('meus',cred()); const hj=hojeISO();
+ if(!C.token&&!C.nascimento) return pedirId('meus');
+ let l; try{ l=await api('meus',credAg()); }catch(e){ if(/identificação expirou/.test(e.message)){ C=null; LS.del('dd_cli'); atualizarTopo(); return pedirId('meus'); } throw e; } const hj=hojeISO();
  const prox=l.filter(a=>['agendado','confirmado'].includes(a.status)&&a.data>=hj).sort((a,b)=>(a.data+a.hora).localeCompare(b.data+b.hora));
  if(!prox.length) return menu('Você não tem agendamentos futuros. Quer marcar um?');
  tmp={lista:prox}; passo='ca_escolha';
- await bot('🗂️ *Seus próximos agendamentos*\n\n'+prox.map(a=>`• *${brDC(a.data)} ${a.modo==='chegada'?'a partir das '+a.hora+' (ordem de chegada)':'às '+a.hora}* — ${a.servico} com ${a.profissional}${a.unidade?' · 📍 '+a.unidade:''} (${STL[a.status]})`).join('\n'),
-  [...prox.slice(0,6).map(a=>({l:`❌ Cancelar ${brDC(a.data)} ${a.hora}`,v:'#c'+a.id})),{l:'Voltar ao menu',v:'menu'}]);
+ await bot('*Seus próximos agendamentos*\n\n'+prox.map(a=>`• *${brDC(a.data)} ${a.modo==='chegada'?'a partir das '+a.hora+' (ordem de chegada)':'às '+a.hora}* — ${a.servico} com ${a.profissional}${a.unidade?' · '+a.unidade:''} (${STL[a.status]})`).join('\n'),
+  [...prox.slice(0,6).map(a=>({l:`Cancelar ${brDC(a.data)} ${a.hora}`,v:'#c'+a.id})),{l:'Voltar ao menu',v:'menu'}]);
 }
 
 async function sair(){
  if(!(await confirmar('Sair da sua conta neste aparelho?\nPara entrar de novo use o código de cliente + data de nascimento.','Sair'))) return;
- C=null;LS.del('dd_cli');hist=[];LS.del('dd_hist');msgsEl.innerHTML='';ultimoDia='';atualizarTopo();telaConta();menu(`Olá! Seja bem-vindo(a) à *Dedica + Saúde*! 💙 Como posso te ajudar?`);
+ C=null;LS.del('dd_cli');hist=[];LS.del('dd_hist');msgsEl.innerHTML='';ultimoDia='';atualizarTopo();telaConta();menu(`Olá! Seja bem-vindo(a) à *Dedica + Saúde*! Como posso te ajudar?`);
 }
 
 const txt=$('#txt');
 function enviar(){const v=txt.value;txt.value='';ajustar();entrada(v);txt.focus();}
+function modoTeclado(){ const dt=PASSOS_DATA.includes(passo); txt.inputMode=dt?'numeric':'text'; txt.placeholder=dt?'dd/mm/aaaa':'Escreva sua mensagem'; }
+setInterval(modoTeclado,400);
 function ajustar(){txt.style.height='48px';txt.style.height=Math.min(130,txt.scrollHeight)+'px';}
-txt.addEventListener('input',ajustar);
+const PASSOS_DATA=['id_nasc','cad_nasc','conf_nasc'];
+function mascaraData(e){
+ if(!PASSOS_DATA.includes(passo)) return;
+ if(e&&e.inputType&&e.inputType.startsWith('delete')) return;
+ const v=txt.value; if(/[^\d\/\s]/.test(v)) return;
+ const d=v.replace(/\D/g,'').slice(0,8);
+ txt.value=d.length>4?d.slice(0,2)+'/'+d.slice(2,4)+'/'+d.slice(4):d.length>2?d.slice(0,2)+'/'+d.slice(2):d;
+}
+txt.addEventListener('input',e=>{mascaraData(e);ajustar();});
 txt.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();enviar();}});
 $('#btEnviar').onclick=enviar; $('#btSair').onclick=sair;
 
@@ -637,7 +648,7 @@ $('#btEnviar').onclick=enviar; $('#btSair').onclick=sair;
 let hMes=new Date(); hMes.setDate(1); let hSlots=[], hSel=null, hProfs=[];
 async function prepararHorarios(){
  const us=await unidades(); const uSel=$('#hUnid'); const ua=uSel.value;
- uSel.innerHTML=us.length?us.map(u=>`<option value="${u.id}">📍 ${esc(u.nome)}</option>`).join(''):'<option value="">Nenhuma unidade disponível</option>';
+ uSel.innerHTML=us.length?us.map(u=>`<option value="${u.id}">${esc(u.nome)}</option>`).join(''):'<option value="">Nenhuma unidade disponível</option>';
  if(ua&&us.some(u=>u.id==ua)) uSel.value=ua;
  await prepararServ();
 }
@@ -670,7 +681,7 @@ function desenharHorarios(){
  for(let i=0;i<ini;i++) h+='<div class="cel fora"></div>';
  for(let d=1;d<=fim;d++){
   const iso=`${hMes.getFullYear()}-${pad(hMes.getMonth()+1)}-${pad(d)}`; const n=por[iso]?por[iso].size:0;
-  h+=`<div class="cel${iso===hj?' hoje':''}${iso===hSel?' sel':''}${iso<hj?' passado':''}" data-d="${iso}"><span class="n">${d}</span><div class="pontos">${n?`<span class="pt st-concluido">${n}</span>`:''}</div></div>`;
+  h+=`<div class="cel${iso===hj?' hoje':''}${iso===hSel?' sel':''}${iso<hj?' passado':''}" data-d="${iso}"><span class="n">${d}</span><div class="pontos">${n?`<span class="pt st-concluido">${hSlots.some(x=>x.data===iso&&x.modo==='chegada')?'✓':n}</span>`:''}</div></div>`;
  }
  const g=$('#hGrade'); g.innerHTML=h;
  g.querySelectorAll('.cel[data-d]').forEach(c=>c.onclick=()=>{hSel=c.dataset.d;desenharHorarios();});
@@ -680,11 +691,11 @@ function desenharHorarios(){
  const it=hSlots.filter(s=>s.data===hSel);
  if(!it.length){ L.innerHTML='<div class="vazio">Sem horários livres neste dia.</div>'; return; }
  const porHora={}; it.forEach(s=>(porHora[s.hora]=porHora[s.hora]||[]).push(s));
- L.innerHTML='<div class="horas">'+Object.keys(porHora).sort().map(hr=>{ const s0=porHora[hr][0]; return `<button class="hbtn${s0.modo==='chegada'?' larga':''}" data-h="${hr}">${s0.modo==='chegada'?hr+' às '+s0.ate:hr}<small>${s0.modo==='chegada'?'ordem de chegada'+(s0.vagas!=null?' · '+s0.vagas+' vaga(s)':''):''}${s0.modo==='chegada'?'<br>':''}${porHora[hr].length>1?porHora[hr].length+' profissionais':esc(s0.profissional)}</small></button>`; }).join('')+'</div><p class="dica">Toque num horário para agendar pela conversa.</p>';
+ L.innerHTML='<div class="horas">'+Object.keys(porHora).sort().map(hr=>{ const s0=porHora[hr][0]; return `<button class="hbtn${s0.modo==='chegada'?' larga':''}" data-h="${hr}">${s0.modo==='chegada'?'Chegue entre '+hr+' e '+s0.ate:''+hr}<small>${s0.modo==='chegada'?'Sem hora marcada: atendimento por ordem de chegada'+(s0.vagas!=null?' · '+s0.vagas+' vaga(s)':''):'Horário marcado'}</small></button>`; }).join('')+'</div><p class="dica">Toque no horário para agendar.</p>';
  L.querySelectorAll('.hbtn').forEach(b=>b.onclick=()=>{
   PRE={unidade_id:+$('#hUnid').value,servico_id:+$('#hServ').value,profissional_id:$('#hProf').value?+$('#hProf').value:null,data:hSel,hora:b.dataset.h};
   irPara('chat');
-  entrada('#agendar-pre','📅 Quero agendar '+brDC(hSel)+' às '+b.dataset.h);
+  entrada('#agendar-pre','Quero agendar '+brDC(hSel)+' às '+b.dataset.h);
  });
 }
 $('#hAnt').onclick=()=>{const hj=new Date();hj.setDate(1);hj.setHours(0,0,0,0);const n=new Date(hMes);n.setMonth(n.getMonth()-1);if(n<hj)return;hMes=n;hSel=null;carregarHorarios();};
@@ -697,30 +708,31 @@ $('#hProf').onchange=()=>{hSel=null;carregarHorarios();};
 /* ============ MINHA CONTA (direitos LGPD) ============ */
 async function telaConta(){
  const P=$('#contaPainel');
- if(!C||!C.nascimento){ P.innerHTML=`<div class="card form-ad"><h2>Minha conta</h2><p>${C?'Por segurança, confirme sua data de nascimento na conversa para ver seus dados e agendamentos.':'Identifique-se pela aba <b>Conversa</b> (é só dizer seu nome).'}</p><button class="btn" id="cIr">Ir para a conversa</button></div>`; $('#cIr').onclick=()=>{irPara('chat');entrada('#meus','🗂️ Meus agendamentos');}; return; }
+ if(!C||(!C.nascimento&&!C.token)){ P.innerHTML=`<div class="card form-ad"><h2>Minha conta</h2><p>${C?'Por segurança, confirme sua data de nascimento na conversa para ver seus dados e agendamentos.':'Identifique-se pela aba <b>Conversa</b> (é só dizer seu nome).'}</p><button class="btn" id="cIr">Ir para a conversa</button></div>`; $('#cIr').onclick=()=>{irPara('chat');entrada('#meus','Meus agendamentos');}; return; }
  P.innerHTML='<div class="card"><div class="vazio">Carregando...</div></div>';
- let d,l; try{ [d,l]=await Promise.all([api('meusDados',cred()),api('meus',cred())]); }catch(e){ P.innerHTML=`<div class="card"><div class="vazio">${esc(e.message)}</div></div>`; return; }
+ let d=null,l; try{ [d,l]=await Promise.all([C.nascimento?api('meusDados',cred()):Promise.resolve(null),api('meus',credAg())]); }catch(e){ P.innerHTML=`<div class="card"><div class="vazio">${esc(e.message)}</div></div>`; return; }
  const hj=hojeISO();
  const prox=l.filter(a=>['agendado','confirmado'].includes(a.status)&&a.data>=hj).sort((a,b)=>(a.data+a.hora).localeCompare(b.data+b.hora));
  const pass=l.filter(a=>!prox.includes(a));
- const item=a=>`<div class="item"><div class="h">${brDC(a.data)}<br>${a.hora}</div><div class="d"><b>${esc(a.servico)}</b><small>${esc(a.profissional)}${a.unidade?' · 📍 '+esc(a.unidade):''}${a.modo==='chegada'?' · ordem de chegada':''} · ${reais(a.valor)}</small></div><span class="tag st-${a.status==='realizado'?'concluido':a.status==='cancelado'||a.status==='faltou'?'cancelado':'agendado'}">${STL[a.status]}</span>${prox.includes(a)?`<button class="btn sec peq" data-cancel="${a.id}">Cancelar</button>`:''}</div>`;
- P.innerHTML=`<div class="card"><h3 class="ct">📅 Próximos agendamentos</h3>${prox.length?prox.map(item).join(''):'<div class="vazio">Nenhum agendamento futuro.</div>'}</div>
+ const item=a=>`<div class="item"><div class="h">${brDC(a.data)}<br>${a.hora}</div><div class="d"><b>${esc(a.servico)}</b><small>${esc(a.profissional)}${a.unidade?' · '+esc(a.unidade):''}${a.modo==='chegada'?' · ordem de chegada':''} · ${reais(a.valor)}</small></div><span class="tag st-${a.status==='realizado'?'concluido':a.status==='cancelado'||a.status==='faltou'?'cancelado':'agendado'}">${STL[a.status]}</span>${prox.includes(a)?`<button class="btn sec peq" data-cancel="${a.id}">Cancelar</button>`:''}</div>`;
+ P.innerHTML=`<div class="card"><h3 class="ct">Próximos agendamentos</h3>${prox.length?prox.map(item).join(''):'<div class="vazio">Nenhum agendamento futuro.</div>'}</div>
  ${pass.length?`<div class="card"><h3 class="ct">Histórico</h3>${pass.slice(0,15).map(item).join('')}</div>`:''}
- <div class="card"><h3 class="ct">🔒 Meus dados</h3>
+ ${d?`<div class="card"><h3 class="ct">Meus dados</h3>
   <div class="dados"><span>Código de cliente</span><b>${d.codigo}</b><span>Nome</span><b>${esc(d.nome)}</b><span>Nascimento</span><b>${brD(d.nascimento)}</b><span>WhatsApp</span><b>${fmtTel(d.telefone)}</b><span>Documento</span><b>${d.doc_tipo?esc(d.doc_tipo)+' •••'+esc(d.doc_final):'Não informado'}</b><span>Nota fiscal</span><b>${d.quer_nf?'Sim':'Não'}</b><span>Aceite da política</span><b>${d.consentimento_em?new Date(d.consentimento_em).toLocaleString('pt-BR')+' (v'+esc(d.consentimento_versao)+')':'—'}</b></div>
   <p class="dica">Para corrigir algum dado, fale com a nossa equipe. Você pode pedir a exclusão dos seus dados a qualquer momento.</p>
-  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn sec peq" id="cPol">📄 Política de Privacidade</button><button class="btn sec peq" id="cSair">Sair deste aparelho</button><button class="btn peq perigo" id="cExcluir">Excluir meus dados</button></div>
- </div>`;
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn sec peq" id="cPol">Política de Privacidade</button><button class="btn sec peq" id="cSair">Sair deste aparelho</button><button class="btn peq perigo" id="cExcluir">Excluir meus dados</button></div>
+ </div>`:`<div class="card"><h3 class="ct">Meus dados</h3><p class="dica">Para ver seus dados pessoais ou pedir a exclusão, confirme sua data de nascimento.</p><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn sec peq" id="cConf">Confirmar data de nascimento</button><button class="btn sec peq" id="cPol">Política de Privacidade</button><button class="btn sec peq" id="cSair">Sair deste aparelho</button></div></div>`}`;
  P.querySelectorAll('[data-cancel]').forEach(b=>b.onclick=async()=>{
   const a=l.find(x=>x.id==b.dataset.cancel);
   if(!(await confirmar(`Cancelar ${a.servico} em ${brDL(a.data)} às ${a.hora}?`,'Cancelar agendamento'))) return;
-  try{ await api('cancelar',{...cred(),id:a.id}); toast('Agendamento cancelado'); telaConta(); carregarHorarios(true); }catch(e){ toast(e.message); }
+  try{ await api('cancelar',{...credAg(),id:a.id}); toast('Agendamento cancelado'); telaConta(); carregarHorarios(true); }catch(e){ toast(e.message); }
  });
  $('#cPol').onclick=abrirPolitica; $('#cSair').onclick=sair;
- $('#cExcluir').onclick=async()=>{
+ if($('#cConf')) $('#cConf').onclick=()=>{ irPara('chat'); pedirNasc('conta'); };
+ if($('#cExcluir')) $('#cExcluir').onclick=async()=>{
   if(!(await confirmar('Excluir seus dados?\n\nSeus agendamentos futuros serão cancelados e seus dados pessoais serão apagados/anonimizados. Isso não pode ser desfeito.','Sim, excluir'))) return;
   if(!(await confirmar('Tem certeza? Esta é a última confirmação.','Excluir definitivamente'))) return;
-  try{ await api('excluirMeusDados',cred()); C=null;LS.del('dd_cli');hist=[];LS.del('dd_hist');msgsEl.innerHTML='';ultimoDia='';atualizarTopo(); toast('Seus dados foram excluídos.'); telaConta(); irPara('chat'); menu('Seus dados foram excluídos com sucesso. Obrigado por ter sido nosso cliente 💚'); }
+  try{ await api('excluirMeusDados',cred()); C=null;LS.del('dd_cli');hist=[];LS.del('dd_hist');msgsEl.innerHTML='';ultimoDia='';atualizarTopo(); toast('Seus dados foram excluídos.'); telaConta(); irPara('chat'); menu('Seus dados foram excluídos com sucesso. Obrigado por ter sido nosso cliente'); }
   catch(e){ toast(e.message); }
  };
 }
@@ -742,7 +754,7 @@ setInterval(()=>{ if(document.hidden) return; if($('#t-horarios').classList.cont
  hist.forEach(render);
  const ult=hist.length?hist[hist.length-1].ts:0;
  if(Date.now()-ult<30*60e3){ passo='menu'; mostrarChips(CH_MENU); }
- else menu(C?`Olá, *${primeiro(C.nome)}*! Que bom ter você de volta 💙\nComo posso te ajudar?`:`Olá! Seja bem-vindo(a) à *Dedica + Saúde*! 💙\nAqui você agenda *check-ups* e *massoterapia* em poucos toques.\n\nComo posso te ajudar?`);
+ else menu(C?`Olá, *${primeiro(C.nome)}*! Que bom ter você de volta!\nComo posso te ajudar?`:`Olá! Seja bem-vindo(a) à *Dedica + Saúde*!\nAqui você agenda *check-ups* e *massoterapia* em poucos toques.\n\nComo posso te ajudar?`);
 })();
 </script>
 </body>
